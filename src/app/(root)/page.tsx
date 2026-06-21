@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export default function Home() {
   return (
     <div className="flex flex-1 items-center justify-center">
@@ -7,6 +9,7 @@ export default function Home() {
           A tool that helps you figure out exactly how to integrate AI into your
           daily workflow.
         </p>
+        <Button>Get Started</Button>
       </section>
     </div>
   );
