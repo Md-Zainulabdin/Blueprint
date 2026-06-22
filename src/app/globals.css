@@ -189,3 +189,18 @@
     @apply font-sans;
   }
 }
+
+@layer utilities {
+  .heading-xl {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  .heading-lg {
+    @apply text-xl font-bold tracking-tight;
+  }
+  .heading-md {
+    @apply text-base font-semibold;
+  }
+  .heading-label {
+    @apply text-sm font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+}
