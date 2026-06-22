@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import ThemeToggle from "@/components/theme-toggle";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Blueprint",
-  description: "Master AI Engineering",
+  title: "Blueprint — FDE Workspace",
+  description:
+    "Forward Deployed Engineering workspace. Describe a manual workflow and get a production-grade AI-agent automation blueprint.",
 };
 
 const geistSans = Geist({
@@ -32,10 +34,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <header className="flex justify-end p-4">
-            <ThemeToggle />
-          </header>
+          <Header />
           {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
