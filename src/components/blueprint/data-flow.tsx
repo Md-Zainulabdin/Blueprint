@@ -19,7 +19,7 @@ export function DataFlow({ dataFlow }: DataFlowProps) {
         <div className="space-y-4">
           {dataFlow.map((step, i) => (
             <div
-              key={i}
+              key={`${step.from}-${step.to}-${i}`}
               className="flex flex-wrap items-center gap-3 rounded-lg border px-5 py-3"
             >
               <span className="font-semibold text-foreground">{step.from || ""}</span>

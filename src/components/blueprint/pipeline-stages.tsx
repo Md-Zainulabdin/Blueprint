@@ -2,22 +2,16 @@
 
 import { cn } from "@/lib/utils";
 import type { PipelineStage } from "@/lib/blueprint/types";
-import { STAGE_NAMES } from "@/lib/blueprint/constants";
 
 export interface PipelineStagesProps {
   stages: PipelineStage[];
 }
 
 export function PipelineStages({ stages }: PipelineStagesProps) {
-  const ordered = STAGE_NAMES.map((name) => {
-    const match = stages.find((s) => s.name === name);
-    return match ?? { name, status: "pending" as const };
-  });
-
   return (
     <div className="w-full max-w-2xl">
       <div className="flex flex-col gap-3">
-        {ordered.map((stage) => (
+        {stages.map((stage) => (
           <div
             key={stage.name}
             className={cn(

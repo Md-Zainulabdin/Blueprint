@@ -18,7 +18,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 function Field({
   className,
   ...props
-}: React.ComponentProps<"div"> & { orientation?: "vertical" | "horizontal" | "responsive" }) {
+}: React.ComponentProps<"div">) {
   return (
     <div
       role="group"
@@ -49,10 +49,7 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
       data-slot="field-title"
-      className={cn(
-        "text-3xl font-bold tracking-tight",
-        className
-      )}
+      className={cn(className)}
       {...props}
     />
   )

@@ -1,7 +1,5 @@
 import type { SearchResult } from "@/lib/blueprint/types";
-
-const TAVILY_API_URL = "https://api.tavily.com/search";
-const FETCH_TIMEOUT_MS = 10_000;
+import { API, TIMEOUT } from "@/lib/constants";
 
 export interface SearchOptions {
   maxResults?: number;
@@ -15,17 +13,16 @@ export async function searchWeb(
   const apiKey = process.env.TAVILY_API_KEY;
 
   if (!apiKey) {
-    console.warn("TAVILY_API_KEY not set — returning empty search results");
     return [];
   }
 
   const { maxResults = 5, searchDepth = "basic" } = options;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), TIMEOUT.TAVILY_MS);
 
   try {
-    const res = await fetch(TAVILY_API_URL, {
+    const res = await fetch(API.TAVILY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,

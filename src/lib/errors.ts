@@ -11,3 +11,15 @@ export function getErrorMessage(err: unknown, fallback = "An unexpected error oc
     return fallback;
   }
 }
+
+/**
+ * Logs an error with context to the server console.
+ * In production this could be replaced with a structured logger or error tracking service.
+ */
+export function logError(context: string, err: unknown): void {
+  const message = getErrorMessage(err, "Unknown error");
+  console.error(`[${context}] ${message}`);
+  if (err instanceof Error && err.stack) {
+    console.error(err.stack);
+  }
+}

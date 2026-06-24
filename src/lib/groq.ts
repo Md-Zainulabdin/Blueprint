@@ -1,11 +1,4 @@
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const TIMEOUT_MS = 30_000;
-
-const FREE_MODELS = [
-  "llama-3.1-8b-instant",
-  "llama-3.3-70b-versatile",
-  "qwen/qwen3-32b",
-];
+import { API, TIMEOUT, MODELS } from "@/lib/constants";
 
 export interface GenerateContentParams {
   prompt: string;
@@ -39,7 +32,7 @@ function userFacingError(status: number): string {
 }
 
 function isRetryable(status: number): boolean {
-  return [404, 429, 500, 502, 503].includes(status);
+  return [429, 500, 502, 503].includes(status);
 }
 
 /**
@@ -57,14 +50,14 @@ export async function generateContent({
   const apiKey = getApiKey();
 
   const modelsToTry = preferredModel
-    ? [preferredModel, ...FREE_MODELS.filter((m) => m !== preferredModel)]
-    : FREE_MODELS;
+    ? [preferredModel, ...MODELS.FREE.filter((m) => m !== preferredModel)]
+    : [...MODELS.FREE];
 
   let lastError: Error | null = null;
 
   for (const modelName of modelsToTry) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), TIMEOUT.GROQ_MS);
 
     try {
       const messages: { role: string; content: string }[] = [];
@@ -73,7 +66,7 @@ export async function generateContent({
       }
       messages.push({ role: "user", content: prompt });
 
-      const res = await fetch(GROQ_API_URL, {
+      const res = await fetch(API.GROQ_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

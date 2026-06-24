@@ -5,14 +5,10 @@ export interface ExecutiveSummaryProps {
   summary: ExecutiveSummary;
 }
 
-/** Renders the Executive Summary section of a blueprint result. */
 export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
   return (
     <section className="max-w-full space-y-5">
-      <div>
-        <h2 className="heading-xl">{summary.title || "Executive Summary"}</h2>
-        <p className="text-muted-foreground mt-1">Executive Summary</p>
-      </div>
+      <h2 className="heading-xl">{summary.title || "Executive Summary"}</h2>
 
       <div className="space-y-4">
         <div>
@@ -30,7 +26,7 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <ul className="mt-1.5 space-y-1">
             {summary.expectedImpact?.length ? (
               summary.expectedImpact.map((item, i) => (
-                <li key={i} className="flex items-start gap-2">
+                <li key={`impact-${i}`} className="flex items-start gap-2">
                   <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
                   <span className="break-words">{item}</span>
                 </li>

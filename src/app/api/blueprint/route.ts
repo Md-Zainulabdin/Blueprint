@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runPipeline } from "@/lib/blueprint/pipeline";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessage, logError } from "@/lib/errors";
+import { LIMITS } from "@/lib/constants";
 
 export const maxDuration = 60;
 
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (workflow.length > 10_000) {
+    if (workflow.length > LIMITS.MAX_WORKFLOW_CHARS) {
       return NextResponse.json(
-        { error: "workflow must be under 10,000 characters" },
+        { error: `workflow must be under ${LIMITS.MAX_WORKFLOW_CHARS.toLocaleString()} characters` },
         { status: 400 }
       );
     }
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(blueprint);
   } catch (err) {
+    logError("POST /api/blueprint", err);
     return NextResponse.json(
       { error: getErrorMessage(err, "An unexpected error occurred") },
       { status: 500 }

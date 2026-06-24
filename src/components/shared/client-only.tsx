@@ -1,6 +1,6 @@
 "use client";
 
-import { useMounted } from "@/lib/hooks/use-mounted";
+import { useMounted } from "@/hooks/use-mounted";
 
 export default function ClientOnly({ children }: { children: React.ReactNode }) {
   const mounted = useMounted();
