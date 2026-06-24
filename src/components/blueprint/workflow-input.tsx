@@ -4,22 +4,35 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldGroup, Field, FieldContent, FieldTitle } from "@/components/ui/field";
+import { FileUpload } from "@/components/blueprint/file-upload";
+import { Separator } from "@/components/ui/separator";
 
 export interface WorkflowInputProps {
-  onSubmit: (workflow: string) => Promise<void>;
+  onSubmit: (workflow: string, file?: File) => Promise<void>;
   disabled?: boolean;
 }
 
 export function WorkflowInput({ onSubmit, disabled }: WorkflowInputProps) {
   const [workflow, setWorkflow] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  function handleFileSelect(f: File | null) {
+    setFile(f);
+    if (f) setWorkflow("");
+  }
+
+  function handleWorkflowChange(value: string) {
+    setWorkflow(value);
+    if (value) setFile(null);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!workflow.trim()) return;
+    if (!workflow.trim() && !file) return;
     setSubmitting(true);
     try {
-      await onSubmit(workflow.trim());
+      await onSubmit(workflow.trim(), file ?? undefined);
     } finally {
       setSubmitting(false);
     }
@@ -30,17 +43,27 @@ export function WorkflowInput({ onSubmit, disabled }: WorkflowInputProps) {
       <FieldGroup>
         <FieldTitle className="heading-xl">Describe Your Workflow</FieldTitle>
         <p className="text-muted-foreground -mt-2">
-          Tell us about a manual, repetitive, or messy process you want to automate.
-          Be specific about the tools, steps, and pain points.
+          Tell us about a manual process you want to automate, or upload a document
+          containing your business requirements.
         </p>
 
         <Field>
-          <FieldContent>
+          <FieldContent className="space-y-4">
             <Textarea
               value={workflow}
-              onChange={(e) => setWorkflow(e.target.value)}
+              onChange={(e) => handleWorkflowChange(e.target.value)}
               placeholder={`Every morning I manually export reports from Salesforce, paste them into a Google Sheet, reformat the columns, then email the PDF to stakeholders...`}
-              rows={8}
+              rows={6}
+              disabled={!!file || disabled || submitting}
+            />
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground/60">or</span>
+              <Separator className="flex-1" />
+            </div>
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              file={file}
               disabled={disabled || submitting}
             />
           </FieldContent>
@@ -48,7 +71,7 @@ export function WorkflowInput({ onSubmit, disabled }: WorkflowInputProps) {
 
         <Button
           type="submit"
-          disabled={!workflow.trim() || disabled || submitting}
+          disabled={(!workflow.trim() && !file) || disabled || submitting}
           className="w-full"
         >
           {submitting ? "Generating Blueprint..." : "Generate Blueprint"}
