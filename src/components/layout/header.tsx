@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Bookmark } from "lucide-react";
 import ThemeToggle from "@/components/shared/theme-toggle";
 
 export default function Header() {
@@ -15,7 +16,15 @@ export default function Header() {
           Workspace
         </Link>
       </nav>
-      <ThemeToggle />
+      <div className="flex items-center gap-1">
+        <Link
+          href="/workspace/saved"
+          className="flex items-center justify-center size-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
+          <Bookmark className="size-4" />
+        </Link>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

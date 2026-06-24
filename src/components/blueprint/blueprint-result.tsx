@@ -8,13 +8,15 @@ import { SystemArchitecture } from "@/components/blueprint/system-architecture";
 import { DataFlow } from "@/components/blueprint/data-flow";
 import { AgentCard } from "@/components/blueprint/agent-card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bookmark } from "lucide-react";
+import { saveBlueprint, SAVE_LIMIT_MESSAGE } from "@/lib/blueprint/save";
 
 const TOTAL_STEPS = 4;
 
 export interface BlueprintResultProps {
   blueprint: BlueprintResponse;
-  onReset: () => void;
+  onBack: () => void;
+  readOnly?: boolean;
 }
 
 function formatGeneratedAt(iso: string): string {
@@ -27,8 +29,20 @@ function formatGeneratedAt(iso: string): string {
   }
 }
 
-export function BlueprintResult({ blueprint, onReset }: BlueprintResultProps) {
+export function BlueprintResult({ blueprint, onBack, readOnly }: BlueprintResultProps) {
   const [step, setStep] = useState(1);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  function handleSave() {
+    const result = saveBlueprint(blueprint);
+    if (result) {
+      setSaved(true);
+      setSaveError("");
+    } else {
+      setSaveError(SAVE_LIMIT_MESSAGE);
+    }
+  }
 
   return (
     <div className="w-full max-w-4xl space-y-8 overflow-hidden">
@@ -38,10 +52,10 @@ export function BlueprintResult({ blueprint, onReset }: BlueprintResultProps) {
         </p>
         <button
           type="button"
-          onClick={onReset}
-          className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+          onClick={onBack}
+          className="link-muted"
         >
-          New Blueprint
+          {readOnly ? "Back to Saved" : "New Blueprint"}
         </button>
       </div>
 
@@ -86,15 +100,29 @@ export function BlueprintResult({ blueprint, onReset }: BlueprintResultProps) {
           <ArrowLeft className="mr-2 size-4" />
           Back
         </Button>
-        {step < TOTAL_STEPS ? (
-          <Button type="button" size="lg" onClick={() => setStep((s) => s + 1)}>
-            Next
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" size="lg" onClick={onReset}>
-            Start Over
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {step < TOTAL_STEPS ? (
+            <Button type="button" size="lg" onClick={() => setStep((s) => s + 1)}>
+              Next
+            </Button>
+          ) : readOnly ? null : (
+            <div className="flex flex-col items-end gap-2">
+              {saveError && (
+                <p className="text-xs text-destructive max-w-64 text-right">{saveError}</p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handleSave}
+                disabled={saved}
+              >
+                <Bookmark className={`mr-2 size-4 ${saved ? "fill-primary text-primary" : ""}`} />
+                {saved ? "Saved" : "Save Blueprint"}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
