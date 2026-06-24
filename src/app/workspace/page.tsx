@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { WorkflowInput } from "@/components/blueprint/workflow-input";
 import { PipelineStages } from "@/components/blueprint/pipeline-stages";
 import { BlueprintResult } from "@/components/blueprint/blueprint-result";
+import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
 import { STAGE_NAMES, createInitialStages } from "@/lib/blueprint/constants";
 import type { PipelineStage, BlueprintResponse } from "@/lib/blueprint/types";
@@ -17,7 +18,7 @@ export default function WorkspacePage() {
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const submittingRef = useRef(false);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const simulateStage = useCallback((index: number) => {
     setStages((prev) => {
@@ -25,8 +26,8 @@ export default function WorkspacePage() {
       if (index > 0 && next[index - 1]) {
         next[index - 1] = { ...next[index - 1], status: "done" };
       }
-      if (index < STAGE_NAMES.length && next[index]) {
-        next[index] = { name: STAGE_NAMES[index], status: "running" };
+      if (index < next.length && next[index]) {
+        next[index] = { ...next[index], status: "running" };
       }
       return next;
     });
@@ -34,7 +35,7 @@ export default function WorkspacePage() {
 
   function clearAllTimers() {
     timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
+    timersRef.current = new Set();
   }
 
   function markStageFailed(message: string) {
@@ -51,31 +52,64 @@ export default function WorkspacePage() {
     });
   }
 
-  async function handleSubmit(workflow: string) {
+  function startTimers(fromIndex: number, stageCount: number) {
+    const remaining = stageCount - fromIndex;
+    const set = new Set<ReturnType<typeof setTimeout>>();
+    for (let i = 0; i < remaining; i++) {
+      const id = setTimeout(() => simulateStage(fromIndex + i), (i + 1) * 2000);
+      set.add(id);
+    }
+    clearAllTimers();
+    timersRef.current = set;
+  }
+
+  async function handleSubmit(workflow: string, file?: File) {
     if (submittingRef.current) return;
     submittingRef.current = true;
 
     try {
       setError("");
       setBlueprint(null);
-      const initialStages = createInitialStages();
+      const hasFile = !!file;
+      const initialStages = createInitialStages(hasFile);
       setStages(initialStages);
       setPhase("generating");
 
       const controller = new AbortController();
       abortRef.current = controller;
 
-      simulateStage(0);
+      let finalWorkflow = workflow;
 
-      // Advance stages visually at paced intervals while the API runs
-      timersRef.current = STAGE_NAMES.slice(1).map((_, i) =>
-        setTimeout(() => simulateStage(i + 1), (i + 1) * 2000)
-      );
+      if (hasFile) {
+        simulateStage(0);
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const extractRes = await fetch("/api/extract", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!extractRes.ok) {
+          const data = await extractRes.json();
+          throw new Error(data.error || "Document extraction failed");
+        }
+
+        const extracted = await extractRes.json();
+        finalWorkflow = extracted.text;
+
+        simulateStage(1);
+        startTimers(2, initialStages.length);
+      } else {
+        simulateStage(0);
+        startTimers(1, initialStages.length);
+      }
 
       const res = await fetch("/api/blueprint", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflow }),
+        body: JSON.stringify({ workflow: finalWorkflow }),
         signal: controller.signal,
       });
 
@@ -138,19 +172,15 @@ export default function WorkspacePage() {
             <p className="font-medium text-destructive">Pipeline Failed</p>
             <p className="break-words text-muted-foreground">{error}</p>
           </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-          >
+          <Button type="button" variant="link" onClick={handleReset}>
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 
       {phase === "done" && blueprint && (
         <div className="flex flex-col items-center gap-8 w-full py-8">
-          <BlueprintResult blueprint={blueprint} onReset={handleReset} />
+          <BlueprintResult blueprint={blueprint} onBack={handleReset} />
         </div>
       )}
     </main>

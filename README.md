@@ -14,7 +14,7 @@ A **Forward Deployed Engineering** workspace. Describe any manual workflow and g
 | Route | Description |
 |-------|-------------|
 | `POST /api/blueprint` | Runs the full 3-stage cognitive pipeline on a workflow description |
-| `POST /api/generate` | Generic Gemini generation endpoint (prompt + optional system instruction) |
+| `POST /api/generate` | Generic Groq generation endpoint (prompt + optional system instruction) |
 
 ### 3-Stage Pipeline (`/api/blueprint`)
 
@@ -55,7 +55,7 @@ src/
 │   │   └── client-only.tsx         # SSR-safe wrapper for Radix portal
 │   └── ui/                         # Shadcn UI components (button, input, textarea, badge, etc.)
 └── lib/
-    ├── gemini.ts                   # Gemini singleton with AbortController timeout
+    ├── groq.ts                     # Groq API client with fallback models and timeout
     ├── search.ts                   # Tavily API client (with timeout, dedup, batch)
     ├── blueprint/
     │   ├── types.ts                # All FDE output TypeScript interfaces
@@ -109,4 +109,4 @@ npm start
 
 All components defensively handle `null`/`undefined` arrays with optional chaining (`?.map(...)`).
 API routes validate input shapes and return typed error responses with appropriate HTTP status codes.
-Gemini requests auto-abort after 30 seconds; Tavily requests after 10 seconds.
+Groq requests auto-abort after 30 seconds; Tavily requests after 10 seconds.

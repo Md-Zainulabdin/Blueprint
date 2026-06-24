@@ -2,6 +2,7 @@ import { generateContent } from "@/lib/groq";
 import { searchWebBatch } from "@/lib/search";
 import { getErrorMessage } from "@/lib/errors";
 import { STAGE_NAMES } from "@/lib/blueprint/constants";
+import { MODELS, LIMITS } from "@/lib/constants";
 import type {
   BlueprintResponse,
   PipelineStage,
@@ -32,14 +33,33 @@ Think step by step:
 3. Architect an AI-driven solution that replaces their manual process with autonomous agents.
 4. Define each agent's exact system prompt, tools, inputs, outputs, and triggers.
 
+Writing style guidelines:
+- Write in a natural, human tone — like a senior consultant explaining their recommendation.
+- Problem and solution descriptions should be narrative and specific, not generic bullet lists.
+- Avoid jargon-heavy language; make it accessible to a business audience while remaining technically precise.
+- Expected impact items should feel like real outcomes a stakeholder would care about.
+
+Each agent's systemPrompt must follow this structured format:
+
+**Persona**: Who the agent is (role, expertise, tone).
+**Task**: The core responsibility this agent carries out.
+**Context**: Background information, constraints, and relevant business rules.
+**Output format**: What the agent produces and how it structures its response.
+
+Example:
+Persona: You are a Sales Reconciliation Agent, a meticulous data analyst skilled in CRM data extraction and variance detection. You communicate clearly and flag discrepancies immediately.
+Task: Cross-reference Salesforce opportunities with NetSuite invoices daily, identify mismatches in amounts or statuses, and escalate discrepancies exceeding $500 to the Finance Review Queue.
+Context: The company runs month-end close on the 5th of each month. Invoices under $5K can be auto-approved; anything above requires a manager's sign-off. Opportunity stages in Salesforce must match "Closed Won" before an invoice is considered valid.
+Output format: For each reconciliation run, produce a JSON report containing: matched_pairs (array of {opportunity_id, invoice_id, amount, status}), discrepancies (array of {opportunity_id, invoice_id, difference, reason}), and a summary line with total matched, total discrepancies, and total dollar variance.
+
 Return ONLY valid JSON matching this exact TypeScript shape — no markdown, no code fences:
 
 {
   "executiveSummary": {
     "title": "string — short, punchy project name",
-    "problemStatement": "string — what the user struggles with",
-    "solutionOverview": "string — how AI agents solve it",
-    "expectedImpact": ["string — bullet of tangible outcome"],
+    "problemStatement": "string — narrative description of the current pain and its business impact",
+    "solutionOverview": "string — how AI agents transform the workflow (human style, not robotic)",
+    "expectedImpact": ["string — tangible, specific outcome stakeholders would care about"],
     "keyStakeholders": ["string — role or title"]
   },
   "architecture": {
@@ -67,7 +87,7 @@ Return ONLY valid JSON matching this exact TypeScript shape — no markdown, no 
       "name": "string — human-readable name",
       "role": "string — one-line job title",
       "model": "string — recommended model ID",
-      "systemPrompt": "string — full, detailed system prompt for this agent",
+      "systemPrompt": "string — structured prompt following Persona / Task / Context / Output format",
       "tools": ["string — tool names this agent uses"],
       "inputs": ["string — what this agent receives"],
       "outputs": ["string — what this agent produces"],
@@ -78,7 +98,8 @@ Return ONLY valid JSON matching this exact TypeScript shape — no markdown, no 
 
 Constraints:
 - Be specific with technology choices (e.g. "OpenAI GPT-4o", "LangChain", "PostgreSQL", "Redis", "n8n", "Make.com").
-- System prompts must be detailed, actionable, and production-ready — at least 3-4 sentences.
+- Each systemPrompt must include all four sections: Persona, Task, Context, Output format.
+- Write in natural, consultant-level prose — not robotic or template-like.
 - Design at least 3 agents but no more than 6.
 - The architecture should include 4-8 components.`;
 
@@ -96,7 +117,7 @@ function buildStage3Prompt(
   const contextBlock = searchContext
     .map(
       (r, i) =>
-        `[Source ${i + 1}: ${r.title}](${r.url})\n${r.content.slice(0, 2000)}`
+        `[Source ${i + 1}: ${r.title}](${r.url})\n${r.content.slice(0, LIMITS.MAX_SEARCH_SNIPPET)}`
     )
     .join("\n\n");
 
@@ -112,7 +133,7 @@ function buildStage3Prompt(
 }
 
 function stripCodeFences(raw: string): string {
-  return raw.replace(/```(?:json)?\s*/gi, "").trim();
+  return raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -169,6 +190,9 @@ function validateBlueprintResponse(value: unknown): BlueprintResponse {
     }
     if (!isNonEmptyString(c.technology)) {
       throw new Error(`Component "${c.name}" must have a non-empty technology`);
+    }
+    if (!isNonEmptyString(c.role)) {
+      throw new Error(`Component "${c.name}" must have a non-empty role`);
     }
   }
 
@@ -291,7 +315,7 @@ export async function runPipeline(
     const stage3 = await generateContent({
       prompt: buildStage3Prompt(userInput, searchResults),
       systemInstruction: STAGE3_SYSTEM,
-      model: "llama-3.3-70b-versatile",
+      model: MODELS.STAGE3,
     });
 
     const cleaned = stripCodeFences(stage3.text);
