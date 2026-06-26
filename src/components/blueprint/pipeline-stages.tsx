@@ -11,11 +11,12 @@ export function PipelineStages({ stages }: PipelineStagesProps) {
   return (
     <div className="w-full max-w-2xl">
       <div className="flex flex-col gap-3">
-        {stages.map((stage) => (
+        {stages.map((stage, i) => (
           <div
             key={stage.name}
+            style={{ animationDelay: `${i * 150}ms` }}
             className={cn(
-              "flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors",
+              "flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors motion-enter-left duration-500",
               stage.status === "running" && "border-primary bg-primary/5",
               stage.status === "done" && "border-border",
               stage.status === "failed" && "border-destructive bg-destructive/5",

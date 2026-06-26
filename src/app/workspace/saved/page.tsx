@@ -90,10 +90,11 @@ export default function SavedPage() {
         </div>
 
         <div className="space-y-3">
-          {items.map((item) => (
+          {items.map((item, i) => (
             <div
               key={item.id}
-              className="rounded-lg border border-border bg-card px-5 py-4 space-y-3"
+              style={{ animationDelay: `${i * 100}ms` }}
+              className="motion-enter-up duration-500 rounded-lg border border-border bg-card px-5 py-4 space-y-3"
             >
               <div className="space-y-1">
                 <p className="text-sm font-medium">{item.title}</p>

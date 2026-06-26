@@ -203,4 +203,13 @@
   .heading-label {
     @apply text-sm font-semibold uppercase tracking-wider text-muted-foreground;
   }
+  .motion-enter {
+    @apply animate-in fade-in fill-mode-backwards;
+  }
+  .motion-enter-up {
+    @apply animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards;
+  }
+  .motion-enter-left {
+    @apply animate-in fade-in slide-in-from-left-4 fill-mode-backwards;
+  }
 }

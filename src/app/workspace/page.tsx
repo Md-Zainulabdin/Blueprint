@@ -149,13 +149,13 @@ export default function WorkspacePage() {
   return (
     <main className="flex flex-1 flex-col items-center p-6 sm:p-8">
       {phase === "input" && (
-        <div className="flex flex-1 flex-col items-center justify-center w-full">
+        <div className="motion-enter duration-500 flex flex-1 flex-col items-center justify-center w-full">
           <WorkflowInput onSubmit={handleSubmit} />
         </div>
       )}
 
       {phase === "generating" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 w-full">
+        <div className="motion-enter duration-500 flex flex-1 flex-col items-center justify-center gap-8 w-full">
           <div className="text-center space-y-1">
             <h2 className="heading-lg">Analyzing Your Workflow</h2>
             <p className="text-muted-foreground">
@@ -167,7 +167,7 @@ export default function WorkspacePage() {
       )}
 
       {phase === "error" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 w-full">
+        <div className="motion-enter duration-500 flex flex-1 flex-col items-center justify-center gap-6 w-full">
           <div className="max-w-md overflow-hidden rounded-lg border border-destructive/50 bg-destructive/5 px-6 py-4 text-center space-y-2">
             <p className="font-medium text-destructive">Pipeline Failed</p>
             <p className="break-words text-muted-foreground">{error}</p>
@@ -179,7 +179,7 @@ export default function WorkspacePage() {
       )}
 
       {phase === "done" && blueprint && (
-        <div className="flex flex-col items-center gap-8 w-full py-8">
+        <div className="motion-enter duration-500 flex flex-col items-center gap-8 w-full py-8">
           <BlueprintResult blueprint={blueprint} onBack={handleReset} />
         </div>
       )}

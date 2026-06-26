@@ -61,7 +61,7 @@ export function BlueprintResult({ blueprint, onBack, readOnly }: BlueprintResult
 
       <StepBar current={step} />
 
-      <div className="min-w-0">
+      <div key={step} className="min-w-0 motion-enter duration-300">
         {step === 1 && <ExecutiveSummary summary={blueprint.executiveSummary} />}
 
         {step === 2 && (
