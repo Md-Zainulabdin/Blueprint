@@ -25,7 +25,7 @@ Rules:
 }
 - Output no more than 2 queries.`;
 
-const STAGE3_SYSTEM = `You are a Forward Deployed Engineer (FDE) and enterprise architect. You are given a user's workflow description and live web research context about their tools. Your job is to design a complete, production-grade AI-agent automation plan.
+const STAGE3_SYSTEM = `You are an enterprise architect. You are given a user's workflow description and live web research context about their tools. Your job is to design a complete, production-grade AI-agent automation plan.
 
 Think step by step:
 1. Understand the user's current manual workflow and its bottlenecks.
@@ -128,7 +128,7 @@ function buildStage3Prompt(
     `## Live Web Research Context`,
     contextBlock || "(No web context retrieved)",
     ``,
-    `Based on the above, generate a complete FDE blueprint following the specified JSON schema.`,
+    `Based on the above, generate a complete blueprint following the specified JSON schema.`,
   ].join("\n");
 }
 
@@ -249,11 +249,11 @@ function validateBlueprintResponse(value: unknown): BlueprintResponse {
 }
 
 /**
- * Runs the full 3-stage FDE cognitive pipeline:
+ * Runs the full 3-stage cognitive pipeline:
  *
  * 1. Research Extraction — LLM extracts 1-2 search queries from user input.
  * 2. Context Enrichment — Web search (Tavily) against those queries.
- * 3. Cognitive FDE Analysis — Final LLM call produces structured BlueprintResponse.
+ * 3. Cognitive Analysis — Final LLM call produces structured BlueprintResponse.
  *
  * Each stage emits its status via the optional `onStage` callback.
  *
@@ -308,7 +308,7 @@ export async function runPipeline(
 
   emit(STAGE_NAMES[1], "done");
 
-  // ── Stage 3: Cognitive FDE Analysis ───────────────────────────────
+  // ── Stage 3: Cognitive Analysis ───────────────────────────────
   emit(STAGE_NAMES[2], "running");
 
   try {
@@ -328,6 +328,6 @@ export async function runPipeline(
   } catch (err) {
     const message = getErrorMessage(err, "Stage 3 failed");
     emit(STAGE_NAMES[2], "failed", message);
-    throw new Error(`Stage 3 (Cognitive FDE Analysis) failed: ${message}`);
+    throw new Error(`Stage 3 (Cognitive Analysis) failed: ${message}`);
   }
 }

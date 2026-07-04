@@ -6,9 +6,9 @@ import Footer from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Blueprint — FDE Workspace",
+  title: "Blueprint — Architect Workspace",
   description:
-    "Forward Deployed Engineering workspace. Describe a manual workflow and get a production-grade AI-agent automation blueprint.",
+    "Architect workspace. Describe a manual workflow and get a production-grade AI-agent automation blueprint.",
 };
 
 const geistSans = Geist({

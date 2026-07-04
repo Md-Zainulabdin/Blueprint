@@ -3,7 +3,7 @@ import type { PipelineStage } from "@/lib/blueprint/types";
 export const STAGE_NAMES = [
   "Research Extraction",
   "Context Enrichment",
-  "Cognitive FDE Analysis",
+  "Cognitive Analysis",
 ] as const;
 
 export const EXTRACTION_STAGE_NAME = "Document Extraction" as const;
