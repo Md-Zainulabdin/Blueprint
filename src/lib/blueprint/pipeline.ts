@@ -196,8 +196,21 @@ function validateBlueprintResponse(value: unknown): BlueprintResponse {
     }
   }
 
+  if (!isNonEmptyString(arch.description)) {
+    throw new Error("architecture.description is required and must be a non-empty string");
+  }
+
   if (!Array.isArray(arch.dataFlow)) {
     throw new Error("architecture.dataFlow must be an array");
+  }
+  for (const flow of arch.dataFlow) {
+    if (!flow || typeof flow !== "object") {
+      throw new Error("Each dataFlow entry must be an object");
+    }
+    const f = flow as Record<string, unknown>;
+    if (!isNonEmptyString(f.from) || !isNonEmptyString(f.to) || !isNonEmptyString(f.action)) {
+      throw new Error("Each dataFlow entry must have non-empty from, to, and action");
+    }
   }
 
   if (!Array.isArray(obj.agents)) {
@@ -213,6 +226,15 @@ function validateBlueprintResponse(value: unknown): BlueprintResponse {
     }
     if (!isNonEmptyString(a.name)) {
       throw new Error(`Agent "${a.id}" must have a non-empty name`);
+    }
+    if (!isNonEmptyString(a.role)) {
+      throw new Error(`Agent "${a.id}" must have a non-empty role`);
+    }
+    if (!isNonEmptyString(a.model)) {
+      throw new Error(`Agent "${a.id}" must have a non-empty model`);
+    }
+    if (!isNonEmptyString(a.systemPrompt)) {
+      throw new Error(`Agent "${a.id}" must have a non-empty systemPrompt`);
     }
     if (!isStringArray(a.tools)) {
       throw new Error(`Agent "${a.id}" tools must be a string array`);
@@ -264,7 +286,11 @@ export async function runPipeline(
   onStage?: StageCallback
 ): Promise<BlueprintResponse> {
   const emit = (name: string, status: PipelineStage["status"], error?: string) => {
-    onStage?.({ name, status, error });
+    try {
+      onStage?.({ name, status, error });
+    } catch {
+      // consumer's callback must not break the pipeline
+    }
   };
 
   // ── Stage 1: Research Extraction ──────────────────────────────────
@@ -281,6 +307,11 @@ export async function runPipeline(
     queries = parsed.queries;
     if (!Array.isArray(queries) || queries.length === 0) {
       throw new Error("No queries extracted");
+    }
+    for (const q of queries) {
+      if (!q || typeof q.query !== "string" || !q.query.trim()) {
+        throw new Error("Each research query must have a non-empty query string");
+      }
     }
   } catch (err) {
     const message = getErrorMessage(err, "Stage 1 failed");

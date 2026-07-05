@@ -6,7 +6,7 @@ import { PipelineStages } from "@/components/blueprint/pipeline-stages";
 import { BlueprintResult } from "@/components/blueprint/blueprint-result";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
-import { STAGE_NAMES, createInitialStages } from "@/lib/blueprint/constants";
+import { createInitialStages } from "@/lib/blueprint/constants";
 import type { PipelineStage, BlueprintResponse } from "@/lib/blueprint/types";
 
 type Phase = "input" | "generating" | "done" | "error";
@@ -89,6 +89,7 @@ export default function WorkspacePage() {
         const extractRes = await fetch("/api/extract", {
           method: "POST",
           body: formData,
+          signal: controller.signal,
         });
 
         if (!extractRes.ok) {
@@ -97,6 +98,9 @@ export default function WorkspacePage() {
         }
 
         const extracted = await extractRes.json();
+        if (!extracted.text || typeof extracted.text !== "string") {
+          throw new Error("Extraction returned no text content");
+        }
         finalWorkflow = extracted.text;
 
         simulateStage(1);

@@ -39,7 +39,11 @@ export default function SavedPage() {
   }, []);
 
   function handleDelete(id: string) {
-    deleteSavedBlueprint(id);
+    try {
+      deleteSavedBlueprint(id);
+    } catch {
+      // delete failed (e.g. storage quota), items remain as-is
+    }
     refresh();
   }
 
@@ -103,7 +107,7 @@ export default function SavedPage() {
                 </p>
               </div>
               <p className="text-xs text-muted-foreground/70 line-clamp-2">
-                {item.blueprint.executiveSummary.problemStatement}
+                {item.blueprint?.executiveSummary?.problemStatement ?? "No description"}
               </p>
               <div className="flex items-center gap-3 pt-1">
                 <Button

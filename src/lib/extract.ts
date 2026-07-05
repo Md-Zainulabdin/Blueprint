@@ -1,3 +1,5 @@
+import { getErrorMessage, logError } from "@/lib/errors";
+
 export interface ExtractionResult {
   text: string;
   metadata: {
@@ -11,44 +13,54 @@ export async function extractText(
   buffer: Buffer,
   filename: string
 ): Promise<ExtractionResult> {
-  const ext = filename.split(".").pop()?.toLowerCase();
+  try {
+    const parts = filename.split(".");
+    if (parts.length < 2 || !parts[parts.length - 1]) {
+      throw new Error(`Cannot determine file extension from filename: "${filename}"`);
+    }
 
-  switch (ext) {
-    case "pdf": {
-      const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
-      const data = await pdfParse(buffer);
-      return {
-        text: data.text,
-        metadata: {
-          pages: data.numpages,
-          words: data.text.split(/\s+/).filter(Boolean).length,
-          type: "pdf",
-        },
-      };
+    const ext = parts.pop()!.toLowerCase();
+
+    switch (ext) {
+      case "pdf": {
+        const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
+        const data = await pdfParse(buffer);
+        return {
+          text: data.text,
+          metadata: {
+            pages: data.numpages,
+            words: data.text.split(/\s+/).filter(Boolean).length,
+            type: "pdf",
+          },
+        };
+      }
+      case "docx": {
+        const mammoth = await import("mammoth");
+        const result = await mammoth.extractRawText({ buffer });
+        return {
+          text: result.value,
+          metadata: {
+            words: result.value.split(/\s+/).filter(Boolean).length,
+            type: "docx",
+          },
+        };
+      }
+      case "txt":
+      case "md": {
+        const text = buffer.toString("utf-8");
+        return {
+          text,
+          metadata: {
+            words: text.split(/\s+/).filter(Boolean).length,
+            type: ext,
+          },
+        };
+      }
+      default:
+        throw new Error(`Unsupported file type: .${ext}`);
     }
-    case "docx": {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer });
-      return {
-        text: result.value,
-        metadata: {
-          words: result.value.split(/\s+/).filter(Boolean).length,
-          type: "docx",
-        },
-      };
-    }
-    case "txt":
-    case "md": {
-      const text = buffer.toString("utf-8");
-      return {
-        text,
-        metadata: {
-          words: text.split(/\s+/).filter(Boolean).length,
-          type: ext,
-        },
-      };
-    }
-    default:
-      throw new Error(`Unsupported file type: .${ext}`);
+  } catch (err) {
+    logError("extractText", err);
+    throw new Error(getErrorMessage(err, "Failed to extract text from file"));
   }
 }

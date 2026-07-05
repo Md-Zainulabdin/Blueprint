@@ -13,6 +13,7 @@ export async function searchWeb(
   const apiKey = process.env.TAVILY_API_KEY;
 
   if (!apiKey) {
+    console.warn("[search] TAVILY_API_KEY is not set — skipping web search");
     return [];
   }
 
