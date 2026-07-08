@@ -55,6 +55,11 @@ Output format: For each reconciliation run, produce a JSON report containing: ma
 Return ONLY valid JSON matching this exact TypeScript shape — no markdown, no code fences:
 
 {
+  "critique": {
+    "validation": "string — assess whether the user's workflow description is clear, complete, and technically feasible. Note ambiguities, gaps, or unrealistic assumptions.",
+    "currentTrends": "string — based on web research, mention 1-2 relevant industry trends, best practices, or technologies that apply to this workflow (e.g. 'Most teams now use event-driven architectures for this pattern' or 'RPA is being replaced by AI agents in this domain').",
+    "recommendations": "string — 2-3 concrete recommendations to improve the user's approach before or during automation. Be specific and actionable."
+  },
   "executiveSummary": {
     "title": "string — short, punchy project name",
     "problemStatement": "string — narrative description of the current pain and its business impact",
@@ -103,14 +108,14 @@ Constraints:
 - Design at least 3 agents but no more than 6.
 - The architecture should include 4-8 components.`;
 
-function buildStage1Prompt(userInput: string): string {
+export function buildStage1Prompt(userInput: string): string {
   return [
     `Extract search queries from the following workflow description:\n`,
     userInput,
   ].join("\n");
 }
 
-function buildStage3Prompt(
+export function buildStage3Prompt(
   userInput: string,
   searchContext: SearchResult[]
 ): string {
@@ -128,28 +133,44 @@ function buildStage3Prompt(
     `## Live Web Research Context`,
     contextBlock || "(No web context retrieved)",
     ``,
+    `Use the web research context to inform your critique.validation, critique.currentTrends, and critique.recommendations fields. Be specific — reference real tools, patterns, or industry shifts from the search results when writing the critique.`,
+    ``,
     `Based on the above, generate a complete blueprint following the specified JSON schema.`,
   ].join("\n");
 }
 
-function stripCodeFences(raw: string): string {
-  return raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+export function stripCodeFences(raw: string): string {
+  return raw.trim().replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 }
 
-function isNonEmptyString(value: unknown): value is string {
+export function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-function isStringArray(value: unknown): value is string[] {
+export function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === "string");
 }
 
-function validateBlueprintResponse(value: unknown): BlueprintResponse {
+export function validateBlueprintResponse(value: unknown): BlueprintResponse {
   if (!value || typeof value !== "object") {
     throw new Error("Blueprint response must be a JSON object");
   }
 
   const obj = value as Record<string, unknown>;
+
+  if (!obj.critique || typeof obj.critique !== "object") {
+    throw new Error("critique is required and must be an object");
+  }
+  const crit = obj.critique as Record<string, unknown>;
+  if (!isNonEmptyString(crit.validation)) {
+    throw new Error("critique.validation is required and must be a non-empty string");
+  }
+  if (!isNonEmptyString(crit.currentTrends)) {
+    throw new Error("critique.currentTrends is required and must be a non-empty string");
+  }
+  if (!isNonEmptyString(crit.recommendations)) {
+    throw new Error("critique.recommendations is required and must be a non-empty string");
+  }
 
   if (!obj.executiveSummary || typeof obj.executiveSummary !== "object") {
     throw new Error("executiveSummary is required and must be an object");
@@ -251,6 +272,7 @@ function validateBlueprintResponse(value: unknown): BlueprintResponse {
   }
 
   const blueprint: BlueprintResponse = {
+    critique: crit as unknown as BlueprintResponse["critique"],
     executiveSummary: {
       title: es.title as string,
       problemStatement: es.problemStatement as string,

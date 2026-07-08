@@ -1,8 +1,15 @@
 export interface BlueprintResponse {
+  critique: Critique;
   executiveSummary: ExecutiveSummary;
   architecture: SystemArchitecture;
   agents: AgentConfiguration[];
   generatedAt: string;
+}
+
+export interface Critique {
+  validation: string;
+  currentTrends: string;
+  recommendations: string;
 }
 
 export interface ExecutiveSummary {
