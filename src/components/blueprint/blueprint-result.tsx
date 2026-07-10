@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { BlueprintResponse } from "@/lib/blueprint/types";
 import { StepBar } from "@/components/blueprint/step-bar";
 import { ExecutiveSummary } from "@/components/blueprint/executive-summary";
@@ -8,8 +8,9 @@ import { SystemArchitecture } from "@/components/blueprint/system-architecture";
 import { DataFlow } from "@/components/blueprint/data-flow";
 import { AgentCard } from "@/components/blueprint/agent-card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bookmark } from "lucide-react";
+import { ArrowLeft, Bookmark, Download } from "lucide-react";
 import { saveBlueprint, SAVE_LIMIT_MESSAGE } from "@/lib/blueprint/save";
+import { downloadBlueprint } from "@/lib/blueprint/export";
 
 const TOTAL_STEPS = 4;
 
@@ -33,6 +34,19 @@ export function BlueprintResult({ blueprint, onBack, readOnly }: BlueprintResult
   const [step, setStep] = useState(1);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [showDownload, setShowDownload] = useState(false);
+  const downloadRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showDownload) return;
+    function handleClick(e: MouseEvent) {
+      if (downloadRef.current && !downloadRef.current.contains(e.target as Node)) {
+        setShowDownload(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showDownload]);
 
   function handleSave() {
     const result = saveBlueprint(blueprint);
@@ -105,21 +119,61 @@ export function BlueprintResult({ blueprint, onBack, readOnly }: BlueprintResult
             <Button type="button" size="lg" onClick={() => setStep((s) => s + 1)}>
               Next
             </Button>
-          ) : readOnly ? null : (
-            <div className="flex flex-col items-end gap-2">
-              {saveError && (
-                <p className="text-xs text-destructive max-w-64 text-right">{saveError}</p>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="relative" ref={downloadRef}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setShowDownload(!showDownload)}
+                >
+                  <Download className="mr-2 size-4" />
+                  Download
+                </Button>
+                {showDownload && (
+                  <div className="absolute bottom-full right-0 mb-2 flex flex-col rounded-lg border bg-popover p-1 shadow-lg">
+                    <button
+                      type="button"
+                      className="whitespace-nowrap rounded-md px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors"
+                      onClick={() => { downloadBlueprint(blueprint, "json"); setShowDownload(false); }}
+                    >
+                      JSON
+                    </button>
+                    <button
+                      type="button"
+                      className="whitespace-nowrap rounded-md px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors"
+                      onClick={() => { downloadBlueprint(blueprint, "markdown"); setShowDownload(false); }}
+                    >
+                      Markdown
+                    </button>
+                    <button
+                      type="button"
+                      className="whitespace-nowrap rounded-md px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors"
+                      onClick={() => { downloadBlueprint(blueprint, "mermaid"); setShowDownload(false); }}
+                    >
+                      Mermaid
+                    </button>
+                  </div>
+                )}
+              </div>
+              {readOnly ? null : (
+                <div className="flex flex-col items-end gap-2">
+                  {saveError && (
+                    <p className="text-xs text-destructive max-w-64 text-right">{saveError}</p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={handleSave}
+                    disabled={saved}
+                  >
+                    <Bookmark className={`mr-2 size-4 ${saved ? "fill-primary text-primary" : ""}`} />
+                    {saved ? "Saved" : "Save Blueprint"}
+                  </Button>
+                </div>
               )}
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handleSave}
-                disabled={saved}
-              >
-                <Bookmark className={`mr-2 size-4 ${saved ? "fill-primary text-primary" : ""}`} />
-                {saved ? "Saved" : "Save Blueprint"}
-              </Button>
             </div>
           )}
         </div>
