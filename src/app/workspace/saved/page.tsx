@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { BlueprintResponse } from "@/lib/blueprint/types";
 import { getSavedBlueprints, deleteSavedBlueprint, MAX_SAVED } from "@/lib/blueprint/save";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import type { SavedBlueprint } from "@/lib/blueprint/save";
 import { BlueprintResult } from "@/components/blueprint/blueprint-result";
 import { Button } from "@/components/ui/button";

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { WorkflowInput } from "@/components/blueprint/workflow-input";
 import { PipelineStages } from "@/components/blueprint/pipeline-stages";
 import { BlueprintResult } from "@/components/blueprint/blueprint-result";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/errors";
 import { createInitialStages } from "@/lib/blueprint/constants";
@@ -151,6 +152,7 @@ export default function WorkspacePage() {
   }
 
   return (
+    <ErrorBoundary>
     <main className="flex flex-1 flex-col items-center p-6 sm:p-8">
       {phase === "input" && (
         <div className="motion-enter duration-500 flex flex-1 flex-col items-center justify-center w-full">
@@ -188,5 +190,6 @@ export default function WorkspacePage() {
         </div>
       )}
     </main>
+    </ErrorBoundary>
   );
 }
