@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateContent } from "@/lib/groq";
 import { LIMITS } from "@/lib/constants";
 import { getErrorMessage, logError } from "@/lib/errors";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const { allowed, remaining, resetAt } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds.` },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) } }
+      );
+    }
     const contentLength = req.headers.get("content-length");
     if (contentLength && Number(contentLength) > LIMITS.MAX_BODY_SIZE) {
       return NextResponse.json(

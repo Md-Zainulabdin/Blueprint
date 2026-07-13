@@ -1,14 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { extractText } from "@/lib/extract";
 import { LIMITS, FILES } from "@/lib/constants";
 import { logError } from "@/lib/errors";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const formData = await request.formData();
+    const ip = getClientIp(req);
+    const { allowed, remaining, resetAt } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${Math.ceil((resetAt - Date.now()) / 1000)} seconds.` },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
+    const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {

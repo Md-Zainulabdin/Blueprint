@@ -41,8 +41,8 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <h3 className="heading-label">Key Stakeholders</h3>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {summary.keyStakeholders?.length ? (
-              summary.keyStakeholders.map((stakeholder) => (
-                <Badge key={stakeholder} variant="outline" className="max-w-full truncate">
+              summary.keyStakeholders.map((stakeholder, i) => (
+                <Badge key={`stakeholder-${i}`} variant="outline" className="max-w-full truncate">
                   {stakeholder}
                 </Badge>
               ))
